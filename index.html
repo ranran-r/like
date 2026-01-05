@@ -333,7 +333,7 @@
             reset() {
                 this.x = Math.random() * width;
                 this.y = -25;
-                this.f = Math.random() * 0.5 - 0.25;
+                this.f = Math.random() * 2 - 1;
                 this.speed = isMobile ? 1 : 1.5;
                 this.word = words[Math.floor(Math.random() * words.length)];
                 this.color = `rgb(${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100})`;
@@ -363,7 +363,7 @@
         
         function initMain() {
             const ballCount = isMobile ? 25 : 30;
-            const loveCount = isMobile ? 20 : 15;
+            const loveCount = isMobile ? 50 : 50;
             
             for (let i = 0; i < ballCount; i++) {
                 balls.push(new Ball());
