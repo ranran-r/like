@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>❤ 永远伴你</title>
-    
     <style>
         * {
             margin: 0;
@@ -34,7 +33,7 @@
             align-items: center;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #000;
             position: relative;
         }
         
@@ -171,56 +170,6 @@
             90% { opacity: 0.6; }
             100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
         }
-        
-        /* 阻止层样式 */
-        #blocker {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            flex-direction: column;
-        }
-        
-        #blocker.show {
-            display: flex;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        #blocker-message {
-            color: #ff6b6b;
-            font-size: 28px;
-            text-align: center;
-            margin-bottom: 30px;
-            font-family: "SimSun", "宋体", serif;
-        }
-        
-        #blocker-btn {
-            padding: 15px 40px;
-            font-size: 20px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-family: "SimSun", "宋体", serif;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-        }
-        
-        #blocker-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
-        }
     </style>
 </head>
 <body>
@@ -234,12 +183,6 @@
         </div>
     </div>
     
-    <!-- 强制阻止层 -->
-    <div id="blocker">
-        <div id="blocker-message">😠 不许逃跑！<br>必须回答喜欢才能继续！</div>
-        <button id="blocker-btn">我知道了~回来继续</button>
-    </div>
-    
     <div class="warning" id="warning-popup">
         <div class="warning-title">💔</div>
         <div class="warning-text" id="warning-text">再给你一次机会！</div>
@@ -249,7 +192,6 @@
     <canvas id="canvas"></canvas>
     
     <script>
-        // 全局变量
         const welcomeScreen = document.getElementById('welcome-screen');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -259,18 +201,123 @@
         const btnYes = document.getElementById('btn-yes');
         const btnNo = document.getElementById('btn-no');
         const floatingHearts = document.getElementById('floating-hearts');
-        const blocker = document.getElementById('blocker');
-        const blockerMessage = document.getElementById('blocker-message');
-        const blockerBtn = document.getElementById('blocker-btn');
-
-        let width = 0;
-        let height = 0;
+        
+        let width, height;
         let isMobile = false;
-        let mainStarted = false;
-        let balls = [];
-        let loves = [];
-
-        // 浪漫文案
+        let closeAttempts = 0;
+        let isForced = false; // 标记是否处于强制状态
+        
+        function createFloatingHearts() {
+            const hearts = ['❤', '💕', '💗', '💖', '💓'];
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 4 + 's';
+                heart.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                floatingHearts.appendChild(heart);
+            }
+        }
+        
+        createFloatingHearts();
+        
+        function showWarning(message) {
+            warningText.textContent = message;
+            warningPopup.classList.add('show');
+        }
+        
+        function hideWarning() {
+            warningPopup.classList.remove('show');
+        }
+        
+        function enterMain() {
+            isForced = false; // 恢复正常状态
+            welcomeScreen.classList.add('hidden');
+            canvas.style.display = 'block';
+            initMain();
+        }
+        
+        btnYes.addEventListener('click', enterMain);
+        
+        btnNo.addEventListener('click', () => {
+            isForced = true; // 开启强制模式
+            closeAttempts++;
+            if (closeAttempts === 1) {
+                showWarning('再给你一次机会！');
+            } else {
+                showWarning('逃避是没有用的哦~');
+            }
+        });
+        
+        warningOk.addEventListener('click', hideWarning);
+        
+        // 阻止ESC键（仅手机端）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (isForced && isMobile) {
+                    e.preventDefault();
+                    showWarning('逃避是没有用的哦~');
+                }
+            }
+            // 阻止F12（仅手机端）
+            if (e.key === 'F12') {
+                if (isForced && isMobile) {
+                    e.preventDefault();
+                    showWarning('逃避是没有用的哦~');
+                }
+            }
+            // 阻止Ctrl+U查看源代码（仅手机端）
+            if (e.ctrlKey && e.key === 'u') {
+                if (isForced && isMobile) {
+                    e.preventDefault();
+                    showWarning('逃避是没有用的哦~');
+                }
+            }
+            // 阻止Ctrl+Shift+I开发者工具（仅手机端）
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                if (isForced && isMobile) {
+                    e.preventDefault();
+                    showWarning('逃避是没有用的哦~');
+                }
+            }
+            // 阻止Ctrl+W关闭页面（仅手机端）
+            if (e.ctrlKey && e.key === 'w') {
+                if (isForced && isMobile) {
+                    e.preventDefault();
+                    showWarning('逃避是没有用的哦~');
+                }
+            }
+        });
+        
+        // 阻止右键菜单（仅手机端）
+        document.addEventListener('contextmenu', (e) => {
+            if (isForced && isMobile) {
+                e.preventDefault();
+                showWarning('逃避是没有用的哦~');
+            }
+        });
+        
+        // 阻止页面离开（仅手机端）
+        document.addEventListener('beforeunload', (e) => {
+            if (isForced && isMobile) {
+                e.preventDefault();
+                e.returnValue = '';
+                showWarning('逃避是没有用的哦~');
+            }
+        });
+        
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            isMobile = width < 600;
+        }
+        
+        resize();
+        window.addEventListener('resize', resize);
+        
         const words = [
             "我陪你",
             "永远伴你",
@@ -295,75 +342,30 @@
             "今夜晚风温柔",
             "你是我的特别"
         ];
-
-        // 创建漂浮的心形
-        function createFloatingHearts() {
-            const heartList = ['❤', '💕', '💗', '💖', '💓'];
-            for (let i = 0; i < 15; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'floating-heart';
-                heart.textContent = heartList[Math.floor(Math.random() * heartList.length)];
-                heart.style.left = Math.random() * 100 + '%';
-                heart.style.animationDelay = Math.random() * 4 + 's';
-                heart.style.animationDuration = (Math.random() * 2 + 3) + 's';
-                floatingHearts.appendChild(heart);
-            }
-        }
-
-        // 显示警告弹窗
-        function showWarning(message) {
-            warningText.textContent = message;
-            warningPopup.classList.add('show');
-        }
-
-        // 隐藏警告弹窗
-        function hideWarning() {
-            warningPopup.classList.remove('show');
-        }
-
-        // 显示阻止层
-        function showBlocker(message) {
-            blockerMessage.innerHTML = message || "😠 不许逃跑！<br>必须回答喜欢才能继续！";
-            blocker.classList.add('show');
-        }
-
-        // 隐藏阻止层
-        function hideBlocker() {
-            blocker.classList.remove('show');
-        }
-
-        // 进入主界面
-        function enterMain() {
-            mainStarted = true;
-            welcomeScreen.classList.add('hidden');
-            canvas.style.display = 'block';
-            initMain();
-        }
-
-        // 彩球类
+        
         class Ball {
             constructor() {
                 this.reset();
                 this.y = Math.random() * height;
             }
-
+            
             reset() {
-                const baseR = isMobile ? 3 : 6;
+                const baseR = isMobile ? 4 : 6;
                 this.r = Math.random() * baseR + 2;
                 this.x = Math.random() * width;
                 this.y = -15;
-                const baseSpeed = isMobile ? 2.5 : 4;
-                this.speed = Math.random() * baseSpeed + 1.5;
-                this.color = `rgb(${Math.floor(Math.random() * 155 + 100)}, ${Math.floor(Math.random() * 155 + 100)}, ${Math.floor(Math.random() * 155 + 100)})`;
+                const baseSpeed = isMobile ? 3 : 4;
+                this.speed = Math.random() * baseSpeed + 2;
+                this.color = `rgb(${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100})`;
             }
-
+            
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
             }
-
+            
             move() {
                 this.y += this.speed;
                 if (this.y > height + 15) {
@@ -372,203 +374,79 @@
                 }
             }
         }
-
-        // 爱心文字类
+        
         class Love {
             constructor() {
                 this.reset();
                 this.y = Math.random() * height;
             }
-
+            
             reset() {
                 this.x = Math.random() * width;
-                this.y = -25;
-                this.f = Math.random() * 2 - 1;
-                this.speed = isMobile ? 1 : 1.5;
+                this.y = -30;
+                this.f = Math.random() * 3 - 1.5;  // 增大水平漂移范围
+                this.speed = Math.random() * 2 + 0.5;  // 随机速度
                 this.word = words[Math.floor(Math.random() * words.length)];
-                this.color = `rgb(${Math.floor(Math.random() * 155 + 100)}, ${Math.floor(Math.random() * 155 + 100)}, ${Math.floor(Math.random() * 155 + 100)})`;
-                this.fontSize = isMobile ? 16 : 20;
+                this.color = `rgb(${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100}, ${Math.floor(Math.random() * 156) + 100})`;
+                this.fontSize = isMobile ? 12 : 16;  // 减小字体更密集
             }
-
+            
             draw() {
-                const font = `bold ${this.fontSize}px SimSun, 宋体, serif`;
-                ctx.font = font;
+                ctx.font = `bold ${this.fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`;
                 ctx.fillStyle = this.color;
-                ctx.textAlign = 'center';
+                ctx.textAlign = "center";
                 ctx.fillText(this.word, this.x, this.y);
             }
-
+            
             move() {
                 this.y += this.speed;
                 this.x += this.f;
-
-                if (this.y > height + 25) {
+                
+                if (this.y > height + 30) {
                     this.reset();
-                    this.y = -25;
+                    this.y = -30;
+                }
+                
+                // 边界反弹，让文字无序飘动
+                if (this.x < 0 || this.x > width) {
+                    this.f = -this.f;
                 }
             }
         }
-
-        // 初始化主界面
+        
+        let balls = [];
+        let loves = [];
+        
         function initMain() {
-            balls = [];
-            loves = [];
-
-            const ballCount = isMobile ? 25 : 30;
-            const loveCount = 50;
-
+            const ballCount = isMobile ? 15 : 30;
+            const loveCount = isMobile ? 25 : 50;
+            
             for (let i = 0; i < ballCount; i++) {
                 balls.push(new Ball());
             }
-
+            
             for (let i = 0; i < loveCount; i++) {
                 loves.push(new Love());
             }
-
+            
             animate();
         }
-
-        // 动画循环
+        
         function animate() {
-            // 绘制半透明黑色背景
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, width, height);
-
-            // 更新和绘制彩球
-            for (const ball of balls) {
+            
+            balls.forEach(ball => {
                 ball.move();
                 ball.draw();
-            }
-
-            // 更新和绘制爱心文字
-            for (const love of loves) {
+            });
+            
+            loves.forEach(love => {
                 love.move();
                 love.draw();
-            }
-
-            // 请求下一帧
-            requestAnimationFrame(animate);
-        }
-
-        // 窗口大小变化
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            isMobile = width < 600;
-        }
-
-        // 键盘按键事件
-        function onKeydown(event) {
-            if (mainStarted) return;
-
-            const key = event.key;
-
-            if (key === 'Escape') {
-                event.preventDefault();
-                showBlocker("😤 ESC键也没用！<br>快点回答喜欢！");
-            }
-            // 拦截F12开发者工具
-            else if (key === 'F12' || (event.ctrlKey && event.shiftKey && key === 'I')) {
-                event.preventDefault();
-                showBlocker("😠 别想用开发者工具逃跑！<br>乖乖回答问题！");
-            }
-            // 拦截Ctrl+W关闭标签
-            else if (event.ctrlKey && key === 'w') {
-                event.preventDefault();
-                showBlocker("😤 关闭标签也没用！<br>必须回答喜欢！");
-            }
-            // 拦截Ctrl+T新开标签
-            else if (event.ctrlKey && key === 't') {
-                event.preventDefault();
-                showBlocker("😠 别想开新标签逃避！<br>这里只有喜欢和讨厌！");
-            }
-            // 拦截Ctrl+N新窗口
-            else if (event.ctrlKey && key === 'n') {
-                event.preventDefault();
-                showBlocker("😤 新窗口也逃不掉！<br>快回来回答！");
-            }
-            // 拦截Ctrl+R刷新
-            else if (event.ctrlKey && key === 'r') {
-                event.preventDefault();
-                showBlocker("😠 刷新页面也没用！<br>喜欢我还是得选喜欢~");
-            }
-        }
-
-        // 页面关闭前事件
-        function onBeforeUnload(event) {
-            if (!mainStarted) {
-                event.preventDefault();
-                event.returnValue = '';
-                showBlocker("😤 不许关闭页面！<br>先把喜欢说出来！");
-                return event.returnValue;
-            }
-        }
-
-        // 页面可见性变化事件
-        function onVisibilityChange(event) {
-            if (!mainStarted && document.hidden) {
-                document.title = "😠回来！别跑！";
-                setTimeout(() => {
-                    document.title = "❤ 永远伴你";
-                }, 2000);
-            }
-        }
-
-        // 窗口失去焦点事件
-        function onBlur(event) {
-            if (!mainStarted) {
-                setTimeout(() => {
-                    if (!document.hasFocus() && !mainStarted && !blocker.classList.contains('show')) {
-                        showBlocker("😠 看着我！别想逃避！<br>快说喜欢！");
-                    }
-                }, 500);
-            }
-        }
-
-        // 右键菜单事件
-        function onContextMenu(event) {
-            if (!mainStarted) {
-                event.preventDefault();
-                showBlocker("😠 右键也没用！<br>快说喜欢~");
-            }
-        }
-
-        // 鼠标移出窗口事件
-        function onMouseout(event) {
-            if (!mainStarted && !isMobile) {
-                if (!event.relatedTarget && !event.toElement) {
-                    showBlocker("😠 别想离开！<br>回答完再走！");
-                }
-            }
-        }
-
-        // 初始化
-        function init() {
-            // 确保 DOM 完全加载后再初始化
-            createFloatingHearts();
-            resize();
+            });
             
-            // 绑定事件
-            btnYes.addEventListener('click', enterMain);
-            btnNo.addEventListener('click', () => showWarning("再给你一次机会！"));
-            warningOk.addEventListener('click', hideWarning);
-            blockerBtn.addEventListener('click', hideBlocker);
-            document.addEventListener('keydown', onKeydown);
-            document.addEventListener('beforeunload', onBeforeUnload);
-            document.addEventListener('visibilitychange', onVisibilityChange);
-            window.addEventListener('blur', onBlur);
-            document.addEventListener('contextmenu', onContextMenu);
-            document.addEventListener('mouseout', onMouseout);
-            window.addEventListener('resize', resize);
-        }
-        
-        // 确保 DOM 加载完成后初始化
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
+            requestAnimationFrame(animate);
         }
     </script>
 </body>
