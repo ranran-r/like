@@ -17,7 +17,7 @@
             overflow: hidden;
             touch-action: none;
             background: #000;
-            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            font-family: "SimSun", "宋体", serif;
         }
         
         #canvas {
@@ -45,6 +45,7 @@
             font-size: 80px;
             animation: pulse 1.5s ease-in-out infinite;
             margin-bottom: 30px;
+            color: #ff0000;
         }
         
         @keyframes pulse {
@@ -58,6 +59,7 @@
             margin-bottom: 50px;
             text-align: center;
             padding: 0 20px;
+            font-family: "SimSun", "宋体", serif;
         }
         
         .buttons {
@@ -74,32 +76,18 @@
             border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: inherit;
-        }
-        
-        .btn-yes {
+            font-family: "SimSun", "宋体", serif;
             background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
             color: white;
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
         }
         
-        .btn-yes:hover {
+        .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
         }
         
-        .btn-no {
-            background: linear-gradient(45deg, #636e72, #2d3436);
-            color: white;
-            box-shadow: 0 4px 15px rgba(99, 110, 114, 0.4);
-        }
-        
-        .btn-no:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 110, 114, 0.6);
-        }
-        
-        .btn-no:active {
+        .btn:active {
             animation: shake 0.5s ease;
         }
         
@@ -184,10 +172,10 @@
     <div id="welcome-screen">
         <div class="floating-hearts" id="floating-hearts"></div>
         <div class="heart">❤</div>
-        <div class="question">你愿意做我闺蜜吗？</div>
+        <div class="question">亲爱的，喜欢我吗？</div>
         <div class="buttons">
-            <button class="btn btn-yes" id="btn-yes">喜欢 ( ^３^ )╱~~</button>
-            <button class="btn btn-no" id="btn-no">讨厌（︶︿︶）</button>
+            <button class="btn" id="btn-yes">喜欢 ( ^３^ )╱~~</button>
+            <button class="btn" id="btn-no">讨厌（︶︿︶）</button>
         </div>
     </div>
     
