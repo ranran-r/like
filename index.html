@@ -17,24 +17,252 @@
             overflow: hidden;
             touch-action: none;
             background: #000;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
         }
         
         #canvas {
-            display: block;
+            display: none;
             width: 100%;
             height: 100%;
+        }
+        
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            position: relative;
+        }
+        
+        #welcome-screen.hidden {
+            display: none;
+        }
+        
+        .heart {
+            font-size: 80px;
+            animation: pulse 1.5s ease-in-out infinite;
+            margin-bottom: 30px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .question {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 50px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .btn-yes {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-yes:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        
+        .btn-no {
+            background: linear-gradient(45deg, #636e72, #2d3436);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 110, 114, 0.4);
+        }
+        
+        .btn-no:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 110, 114, 0.6);
+        }
+        
+        .btn-no:active {
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+        
+        .warning.show {
+            display: block;
+            animation: popIn 0.3s ease;
+        }
+        
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        .warning-title {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .warning-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .warning-btn {
+            padding: 10px 30px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a5a);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .floating-heart {
+            position: absolute;
+            font-size: 20px;
+            animation: floatUp 4s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
         }
     </style>
 </head>
 <body>
+    <div id="welcome-screen">
+        <div class="floating-hearts" id="floating-hearts"></div>
+        <div class="heart">❤</div>
+        <div class="question">你愿意做我闺蜜吗？</div>
+        <div class="buttons">
+            <button class="btn btn-yes" id="btn-yes">喜欢 ( ^３^ )╱~~</button>
+            <button class="btn btn-no" id="btn-no">讨厌（︶︿︶）</button>
+        </div>
+    </div>
+    
+    <div class="warning" id="warning-popup">
+        <div class="warning-title">❤</div>
+        <div class="warning-text" id="warning-text">再给你一次机会！</div>
+        <button class="warning-btn" id="warning-ok">知道了~</button>
+    </div>
+    
     <canvas id="canvas"></canvas>
     
     <script>
+        const welcomeScreen = document.getElementById('welcome-screen');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const warningPopup = document.getElementById('warning-popup');
+        const warningText = document.getElementById('warning-text');
+        const warningOk = document.getElementById('warning-ok');
+        const btnYes = document.getElementById('btn-yes');
+        const btnNo = document.getElementById('btn-no');
+        const floatingHearts = document.getElementById('floating-hearts');
         
         let width, height;
         let isMobile = false;
+        let closeAttempts = 0;
+        
+        function createFloatingHearts() {
+            const hearts = ['❤', '💕', '💗', '💖', '💓'];
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 4 + 's';
+                heart.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                floatingHearts.appendChild(heart);
+            }
+        }
+        
+        createFloatingHearts();
+        
+        function showWarning(message) {
+            warningText.textContent = message;
+            warningPopup.classList.add('show');
+        }
+        
+        function hideWarning() {
+            warningPopup.classList.remove('show');
+        }
+        
+        function enterMain() {
+            welcomeScreen.classList.add('hidden');
+            canvas.style.display = 'block';
+            initMain();
+        }
+        
+        btnYes.addEventListener('click', enterMain);
+        
+        btnNo.addEventListener('click', () => {
+            showWarning('再给你一次机会！');
+        });
+        
+        warningOk.addEventListener('click', hideWarning);
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                showWarning('逃避是没有用的哦~');
+            }
+        });
+        
+        document.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = '';
+            showWarning('逃避是没有用的哦~');
+        });
         
         function resize() {
             width = window.innerWidth;
@@ -138,18 +366,22 @@
             }
         }
         
-        const balls = [];
-        const loves = [];
+        let balls = [];
+        let loves = [];
         
-        const ballCount = isMobile ? 15 : 30;
-        const loveCount = isMobile ? 10 : 15;
-        
-        for (let i = 0; i < ballCount; i++) {
-            balls.push(new Ball());
-        }
-        
-        for (let i = 0; i < loveCount; i++) {
-            loves.push(new Love());
+        function initMain() {
+            const ballCount = isMobile ? 15 : 30;
+            const loveCount = isMobile ? 10 : 15;
+            
+            for (let i = 0; i < ballCount; i++) {
+                balls.push(new Ball());
+            }
+            
+            for (let i = 0; i < loveCount; i++) {
+                loves.push(new Love());
+            }
+            
+            animate();
         }
         
         function animate() {
@@ -168,8 +400,6 @@
             
             requestAnimationFrame(animate);
         }
-        
-        animate();
     </script>
 </body>
 </html>
