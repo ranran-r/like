@@ -176,10 +176,10 @@
     <div id="welcome-screen">
         <div class="floating-hearts" id="floating-hearts"></div>
         <div class="heart">❤️</div>
-        <div class="question">亲爱的，喜欢我吗？</div>
+        <div class="question">亲爱的，我是你最好的朋友吗？</div>
         <div class="buttons">
-            <button class="btn" id="btn-yes">喜欢 ( ^３^ )╱~~</button>
-            <button class="btn" id="btn-no">讨厌（︶︿︶）</button>
+            <button class="btn" id="btn-yes">是的 ( ^３^ )╱~~</button>
+            <button class="btn" id="btn-no">不是（︶︿︶）</button>
         </div>
     </div>
     
@@ -252,41 +252,98 @@
         
         warningOk.addEventListener('click', hideWarning);
         
+        // 强制模式下阻止页面交互
+        function blockPageInteraction() {
+            if (isForced && isMobile) {
+                // 阻止页面滚动
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.top = '0';
+                document.body.style.left = '0';
+                document.body.style.width = '100%';
+                document.body.style.height = '100%';
+            } else {
+                // 恢复正常滚动
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.left = '';
+                document.body.style.width = '';
+                document.body.style.height = '';
+            }
+        }
+        
+        // 阻止浏览器返回键（仅手机端强制模式）
+        window.addEventListener('popstate', (e) => {
+            if (isForced && isMobile) {
+                // 重新推回历史，让用户无法返回
+                history.pushState(null, '', window.location.href);
+                showWarning('逃避是没有用的哦~');
+            }
+        });
+        
+        // 阻止页面可见性变化（切换标签页或最小化）
+        document.addEventListener('visibilitychange', () => {
+            if (isForced && isMobile && document.hidden) {
+                // 当用户切换标签页时，显示警告
+                showWarning('逃避是没有用的哦~');
+            }
+        });
+        
+        // 强制模式下定期重置历史记录，防止返回
+        setInterval(() => {
+            if (isForced && isMobile) {
+                history.pushState(null, '', window.location.href);
+            }
+        }, 100);
+        
         // 阻止ESC键（仅手机端）
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (isForced && isMobile) {
-                    e.preventDefault();
-                    showWarning('逃避是没有用的哦~');
-                }
+            if (isForced && isMobile) {
+                e.preventDefault();
+                e.stopPropagation();
+                showWarning('逃避是没有用的哦~');
+                return false;
             }
-            // 阻止F12（仅手机端）
-            if (e.key === 'F12') {
-                if (isForced && isMobile) {
-                    e.preventDefault();
-                    showWarning('逃避是没有用的哦~');
-                }
+        });
+        
+        // 阻止F12（仅手机端）
+        document.addEventListener('keydown', (e) => {
+            if (isForced && isMobile && e.key === 'F12') {
+                e.preventDefault();
+                e.stopPropagation();
+                showWarning('逃避是没有用的哦~');
+                return false;
             }
-            // 阻止Ctrl+U查看源代码（仅手机端）
-            if (e.ctrlKey && e.key === 'u') {
-                if (isForced && isMobile) {
-                    e.preventDefault();
-                    showWarning('逃避是没有用的哦~');
-                }
+        });
+        
+        // 阻止Ctrl+U查看源代码（仅手机端）
+        document.addEventListener('keydown', (e) => {
+            if (isForced && isMobile && e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                e.stopPropagation();
+                showWarning('逃避是没有用的哦~');
+                return false;
             }
-            // 阻止Ctrl+Shift+I开发者工具（仅手机端）
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                if (isForced && isMobile) {
-                    e.preventDefault();
-                    showWarning('逃避是没有用的哦~');
-                }
+        });
+        
+        // 阻止Ctrl+Shift+I开发者工具（仅手机端）
+        document.addEventListener('keydown', (e) => {
+            if (isForced && isMobile && e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+                e.stopPropagation();
+                showWarning('逃避是没有用的哦~');
+                return false;
             }
-            // 阻止Ctrl+W关闭页面（仅手机端）
-            if (e.ctrlKey && e.key === 'w') {
-                if (isForced && isMobile) {
-                    e.preventDefault();
-                    showWarning('逃避是没有用的哦~');
-                }
+        });
+        
+        // 阻止Ctrl+W关闭页面（仅手机端）
+        document.addEventListener('keydown', (e) => {
+            if (isForced && isMobile && e.ctrlKey && e.key === 'w') {
+                e.preventDefault();
+                e.stopPropagation();
+                showWarning('逃避是没有用的哦~');
+                return false;
             }
         });
         
@@ -294,7 +351,9 @@
         document.addEventListener('contextmenu', (e) => {
             if (isForced && isMobile) {
                 e.preventDefault();
+                e.stopPropagation();
                 showWarning('逃避是没有用的哦~');
+                return false;
             }
         });
         
@@ -302,7 +361,7 @@
         document.addEventListener('beforeunload', (e) => {
             if (isForced && isMobile) {
                 e.preventDefault();
-                e.returnValue = '';
+                e.returnValue = '逃避是没有用的哦~';
                 showWarning('逃避是没有用的哦~');
             }
         });
